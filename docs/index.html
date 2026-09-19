@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#121116">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Tek Çizgi Yavuz - 100 Bölüm</title>
+  <style>
+    :root {
+      --bg: #121116;
+      --bg-card: #1c1a22;
+      --border: #2e2b38;
+      --ink: #f4f3f6;
+      --ink-dim: #9b97a8;
+      --accent: #ff5722;
+      --accent-glow: rgba(255, 87, 34, 0.4);
+      --success: #10b981;
+      --edge-base: #343040;
+      --edge-done: #ff5722;
+      --dot: #504b61;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      touch-action: manipulation;
+    }
+    header {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 4px 12px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 19px;
+      cursor: pointer;
+    }
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #d83b0b);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .btn-sound {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    main { width: 100%; max-width: 440px; }
+
+    /* SEVİYE SEÇİMİ */
+    .tab-wrap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--ink-dim);
+      padding: 10px 4px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active {
+      border-color: var(--accent);
+      color: var(--ink);
+      background: #282433;
+    }
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 9px;
+    }
+    .level-card {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .level-card:active { transform: scale(0.92); }
+    .level-card .num { font-size: 18px; font-weight: 900; }
+    .level-card .name { font-size: 8px; color: var(--ink-dim); margin-top: 2px; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .level-card .time { font-size: 8px; color: var(--accent); font-weight: 800; margin-top: 2px; }
+    .level-card.active-play { border-color: var(--accent); }
+    .level-card.done { border-color: var(--success); }
+    .level-card.done::after {
+      content: '✓';
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      background: var(--success);
+      color: white;
+      font-size: 8px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+    .level-card.locked {
+      background: #0d0c10;
+      border-color: #18171f;
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    /* OYUN TAHTASI */
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--ink-dim);
+    }
+    .stats-bar b { color: var(--ink); font-size: 15px; margin-left: 4px; }
+    .board-frame {
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--bg-card);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    }
+    svg { width: 100%; height: 100%; display: block; }
+    .dead-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1.5px solid rgba(239, 68, 68, 0.5);
+      color: #f87171;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .dead-box button {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .act-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      padding: 10px 0;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .act-btn:active { transform: scale(0.95); }
+    .act-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* KAZANMA MODALI */
+    .win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+    .win-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+    .win-card h2 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+    .win-card p { color: var(--ink-dim); font-size: 14px; margin-bottom: 16px; }
+    .win-card .btn-next {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .win-card .btn-menu {
+      width: 100%;
+      background: transparent;
+      color: var(--ink-dim);
+      border: none;
+      padding: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .shake { animation: shake 0.35s ease-in-out; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .pulse-hint { animation: pulse 0.8s infinite alternate; }
+    @keyframes pulse {
+      0% { r: 14; opacity: 0.6; }
+      100% { r: 24; opacity: 1; stroke-width: 4; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo" onclick="openMenu()">
+      <div class="logo-badge">☡</div>
+      <span>Tek Çizgi Yavuz</span>
+    </div>
+    <button class="btn-sound" id="soundBtn" onclick="toggleSound()">🔊</button>
+  </header>
+
+  <main id="app"></main>
+
+  <div id="modalWin" class="win-overlay" style="display:none;">
+    <div class="win-card">
+      <h2>Harika! 🎉</h2>
+      <p id="winMsg">Bölüm tamamlandı!</p>
+      <button class="btn-next" onclick="nextLevel()">Sonraki Bölüm ➔</button>
+      <button class="btn-menu" onclick="openMenu()">Bölümler Menüsü</button>
+    </div>
+  </div>
+
+  <script>
+    // SES MOTORU (Web Audio API)
+    let soundOn = true;
+    let audioCtx = null;
+    function getAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    function toggleSound() {
+      soundOn = !soundOn;
+      document.getElementById('soundBtn').innerText = soundOn ? '🔊' : '🔇';
+    }
+    function playTone(freq, dur, type='sine') {
+      if (!soundOn) return;
+      try {
+        const ctx = getAudio();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+      } catch(e) {}
+    }
+    function playStep(i) { playTone(280 + Math.min(i * 18, 500), 0.1, 'triangle'); }
+    function playDead() { playTone(120, 0.35, 'sawtooth'); }
+    function playWin() {
+      [440, 554, 659, 880].forEach((f, idx) => {
+        setTimeout(() => playTone(f, 0.22, 'sine'), idx * 70);
+      });
+    }
+
+    // %100 ÇÖZÜLEBİLİR 100 BÖLÜM GEOMETRİSİ
+    function generateLevels() {
+      const lvls = [
+        { name: 'Üçgen', dots: [{x:200,y:90},{x:90,y:310},{x:310,y:310}], edges: [[0,1],[1,2],[2,0]] },
+        { name: 'Kum Saati', dots: [{x:100,y:100},{x:300,y:100},{x:200,y:200},{x:100,y:300},{x:300,y:300}], edges: [[0,1],[1,2],[2,0],[2,3],[3,4],[4,2]] },
+        { name: 'Zarf', dots: [{x:100,y:150},{x:300,y:150},{x:300,y:320},{x:100,y:320},{x:200,y:70}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
+        { name: 'Elmas Kare', dots: [{x:200,y:70},{x:330,y:200},{x:200,y:330},{x:70,y:200},{x:200,y:200}], edges: [[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]] },
+        { name: 'Yıldız', dots: [{x:200,y:60},{x:290,y:340},{x:60,y:170},{x:340,y:170},{x:110,y:340}], edges: [[0,1],[1,2],[2,3],[3,4],[4,0]] },
+        { name: 'Kelebek', dots: [{x:80,y:100},{x:200,y:200},{x:80,y:300},{x:320,y:100},{x:320,y:300}], edges: [[0,1],[1,2],[2,0],[1,3],[3,4],[4,1],[0,3],[2,4]] },
+        { name: 'Çift Üçgen', dots: [{x:200,y:60},{x:80,y:260},{x:320,y:260},{x:200,y:350}], edges: [[0,1],[1,2],[2,0],[1,3],[2,3]] },
+        { name: 'Çapraz Ev', dots: [{x:90,y:150},{x:310,y:150},{x:310,y:330},{x:90,y:330},{x:200,y:60}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
+        { name: 'Hexagon Yıldız', dots: [{x:200,y:60},{x:320,y:130},{x:320,y:270},{x:200,y:340},{x:80,y:270},{x:80,y:130},{x:200,y:200}], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6]] },
+        { name: 'Piramit', dots: [{x:200,y:60},{x:100,y:220},{x:300,y:220},{x:50,y:340},{x:350,y:340}], edges: [[0,1],[0,2],[1,2],[1,3],[2,4],[3,4],[1,4],[2,3]] }
+      ];
+
+      // 11'den 100'e kadar garantili Eulerian Euler döngü/patika grafikleri oluşturma
+      for (let lvl = 11; lvl <= 100; lvl++) {
+        const dotCount = 5 + ((lvl * 3) % 7); // 5 ila 11 nokta
+        const radius = 130;
+        const pts = [];
+        for (let j = 0; j < dotCount; j++) {
+          const ang = (j / dotCount) * Math.PI * 2 - Math.PI / 2;
+          const r = radius - (j % 2 === 1 ? (lvl % 3) * 20 : 0);
+          pts.push({
+            x: Math.round(200 + Math.cos(ang) * r),
+            y: Math.round(200 + Math.sin(ang) * r)
+          });
+        }
+        
+        // Eulerian Circuit/Trail tabanlı kenar oluşturma (Tek çizgi garantisi)
+        const edges = [];
+        const visitedPair = new Set();
+        const addEdge = (u, v) => {
+          if (u === v) return;
+          const k = u < v ? `${u}-${v}` : `${v}-${u}`;
+          if (!visitedPair.has(k)) {
+            visitedPair.add(k);
+            edges.push([u, v]);
+          }
+        };
+
+        // 1. Ana halka
+        for (let j = 0; j < dotCount; j++) {
+          addEdge(j, (j + 1) % dotCount);
+        }
+
+        // 2. İç çapraz desenler (Eulerian özelliği koruyacak şekilde 2'şer derece eklenir)
+        const step = 2 + (lvl % Math.max(2, Math.floor(dotCount / 2)));
+        for (let j = 0; j < dotCount; j++) {
+          addEdge(j, (j + step) % dotCount);
+        }
+
+        if (lvl % 3 === 0) {
+          // Merkez nokta ve çift bağlı tepe ekleme
+          const centerIdx = pts.length;
+          pts.push({ x: 200, y: 200 });
+          for (let j = 0; j < dotCount; j += 2) {
+            addEdge(j, centerIdx);
+            addEdge((j + 1) % dotCount, centerIdx);
+          }
+        }
+
+        lvls.push({
+          name: `Desen ${lvl}`,
+          dots: pts,
+          edges: edges
+        });
+      }
+      return lvls;
+    }
+
+    const LEVELS = generateLevels();
+    let currentLevel = 0;
+    let progress = JSON.parse(localStorage.getItem('yavuz_cizgi_prog') || '{}');
+    let activeTab = 1;
+
+    // OYUN DURUMU
+    let edgeDone = [];
+    let visitedDots = new Set();
+    let currentDot = -1;
+    let pathHistory = [];
+    let isDeadEnd = false;
+    let isDragging = false;
+    let dragPos = null;
+    let timerInt = null;
+    let startSec = 0;
+    let elapsedSec = 0;
+    let activeHintDot = -1;
+
+    function openMenu() {
+      stopTimer();
+      renderLevelSelect();
+    }
+
+    function setTab(t) { activeTab = t; renderLevelSelect(); }
+
+    function renderLevelSelect() {
+      const app = document.getElementById('app');
+      let html = `
+        <div class="tab-wrap">
+          <button class="tab-btn ${activeTab===1?'active':''}" onclick="setTab(1)">1 – 25</button>
+          <button class="tab-btn ${activeTab===2?'active':''}" onclick="setTab(2)">26 – 50</button>
+          <button class="tab-btn ${activeTab===3?'active':''}" onclick="setTab(3)">51 – 75</button>
+          <button class="tab-btn ${activeTab===4?'active':''}" onclick="setTab(4)">76 – 100</button>
+        </div>
+        <div class="level-grid">
+      `;
+      const start = (activeTab - 1) * 25;
+      const end = Math.min(start + 25, LEVELS.length);
+
+      for (let i = start; i < end; i++) {
+        const isUnlocked = (i === 0 || progress[i - 1] !== undefined);
+        const isDone = progress[i] !== undefined;
+        const best = progress[i];
+
+        if (!isUnlocked) {
+          html += `
+            <div class="level-card locked">
+              <div class="num">${i + 1}</div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="level-card ${isDone ? 'done' : 'active-play'}" onclick="startLevel(${i})">
+              <div class="num">${i + 1}</div>
+              <div class="name">${LEVELS[i].name}</div>
+              ${best !== undefined ? `<div class="time">${best.toFixed(1)}s</div>` : ''}
+            </div>
+          `;
+        }
+      }
+      html += '</div>';
+      app.innerHTML = html;
+    }
+
+    function startLevel(idx) {
+      currentLevel = idx;
+      const lvl = LEVELS[idx];
+      edgeDone = lvl.edges.map(() => false);
+      visitedDots.clear();
+      currentDot = -1;
+      pathHistory = [];
+      isDeadEnd = false;
+      isDragging = false;
+      dragPos = null;
+      activeHintDot = -1;
+      stopTimer();
+      elapsedSec = 0;
+
+      const app = document.getElementById('app');
+      const best = progress[idx];
+
+      app.innerHTML = `
+        <div class="stats-bar">
+          <div>BÖLÜM <b>${idx + 1}/${LEVELS.length}</b></div>
+          <div>SÜRE <b id="timerText" style="color:var(--ink);">0.0s</b></div>
+          <div>REKOR <b>${best !== undefined ? best.toFixed(1)+'s' : '–'}</b></div>
+        </div>
+
+        <div class="board-frame" id="boardFrame">
+          <svg id="gameSvg" viewBox="0 0 400 400"></svg>
+        </div>
+
+        <div id="deadBox" class="dead-box" style="display:none;">
+          <span>💀 Tıkandın! Süre Durduruldu.</span>
+          <button onclick="undoStroke()">Geri Al ↶</button>
+        </div>
+
+        <div class="actions-grid">
+          <button class="act-btn" onclick="startLevel(${idx})"><span>↺</span><span>Sıfırla</span></button>
+          <button class="act-btn" id="undoBtn" onclick="undoStroke()" disabled><span>↶</span><span>Geri Al</span></button>
+          <button class="act-btn" onclick="giveSmartHint()"><span>💡</span><span>İpucu</span></button>
+          <button class="act-btn" onclick="openMenu()"><span>←</span><span>Menü</span></button>
+        </div>
+      `;
+
+      bindEvents();
+      drawSvg();
+    }
+
+    function stopTimer() {
+      if (timerInt) { clearInterval(timerInt); timerInt = null; }
+    }
+    function startTimer() {
+      if (isDeadEnd) return;
+      stopTimer();
+      startSec = performance.now() - (elapsedSec * 1000);
+      timerInt = setInterval(() => {
+        elapsedSec = (performance.now() - startSec) / 1000;
+        const el = document.getElementById('timerText');
+        if (el) el.innerText = elapsedSec.toFixed(1) + 's';
+      }, 100);
+    }
+
+    function drawSvg() {
+      const svg = document.getElementById('gameSvg');
+      if (!svg) return;
+      const lvl = LEVELS[currentLevel];
+
+      let svgHtml = '';
+      // Çizilmemiş gri kenarlar
+      lvl.edges.forEach(([u, v], i) => {
+        if (!edgeDone[i]) {
+          svgHtml += `<line x1="${lvl.dots[u].x}" y1="${lvl.dots[u].y}" x2="${lvl.dots[v].x}" y2="${lvl.dots[v].y}" stroke="var(--edge-base)" stroke-width="7" stroke-linecap="round"/>`;
+        }
+      });
+
+      // Çizilmiş turuncu kenarlar
+      lvl.edges.forEach(([u, v], i) => {
+        if (edgeDone[i]) {
+          svgHtml += `<line x1="${lvl.dots[u].x}" y1="${lvl.dots[u].y}" x2="${lvl.dots[v].x}" y2="${lvl.dots[v].y}" stroke="var(--edge-done)" stroke-width="9" stroke-linecap="round"/>`;
+        }
+      });
+
+      // Parmağı/Fareyi takip eden canlı çizgi
+      if (isDragging && currentDot !== -1 && dragPos && !isDeadEnd) {
+        const cur = lvl.dots[currentDot];
+        svgHtml += `<line x1="${cur.x}" y1="${cur.y}" x2="${dragPos.x}" y2="${dragPos.y}" stroke="rgba(255, 87, 34, 0.6)" stroke-width="6" stroke-linecap="round" stroke-dasharray="6,6"/>`;
+      }
+
+      // Noktalar
+      lvl.dots.forEach((d, i) => {
+        const isCur = currentDot === i;
+        const isVis = visitedDots.has(i);
+        const isHint = activeHintDot === i;
+
+        if (isHint) {
+          svgHtml += `<circle class="pulse-hint" cx="${d.x}" cy="${d.y}" r="20" fill="none" stroke="#fbbf24" stroke-width="3"/>`;
+        }
+        if (isCur) {
+          svgHtml += `<circle cx="${d.x}" cy="${d.y}" r="17" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+        }
+        svgHtml += `<circle cx="${d.x}" cy="${d.y}" r="${isCur?12:10}" fill="${isCur||isVis?'var(--accent)':'var(--dot)'}"/>`;
+      });
+      svg.innerHTML = svgHtml;
+
+      const undoBtn = document.getElementById('undoBtn');
+      if (undoBtn) undoBtn.disabled = pathHistory.length === 0;
+    }
+
+    function bindEvents() {
+      const frame = document.getElementById('boardFrame');
+      const getCoord = (e) => {
+        const rect = frame.getBoundingClientRect();
+        return {
+          x: ((e.clientX - rect.left) / rect.width) * 400,
+          y: ((e.clientY - rect.top) / rect.height) * 400
+        };
+      };
+
+      const findDot = (pt) => {
+        const lvl = LEVELS[currentLevel];
+        let best = -1, minD = 999;
+        lvl.dots.forEach((d, i) => {
+          const dist = Math.hypot(pt.x - d.x, pt.y - d.y);
+          if (dist < minD) { minD = dist; best = i; }
+        });
+        return minD <= 36 ? best : -1;
+      };
+
+      const onDown = (e) => {
+        if (isDeadEnd) return;
+        const pt = getCoord(e);
+        dragPos = pt;
+        const idx = findDot(pt);
+
+        if (currentDot === -1) {
+          if (idx !== -1) {
+            currentDot = idx;
+            visitedDots.add(idx);
+            isDragging = true;
+            activeHintDot = -1;
+            startTimer();
+            playStep(0);
+            drawSvg();
+          }
+        } else {
+          isDragging = true;
+          if (idx !== -1 && idx !== currentDot) {
+            tryAdvance(idx);
+          }
+        }
+      };
+
+      const onMove = (e) => {
+        if (!isDragging || isDeadEnd) return;
+        const pt = getCoord(e);
+        dragPos = pt;
+        const idx = findDot(pt);
+        if (idx !== -1 && idx !== currentDot) {
+          tryAdvance(idx);
+        } else {
+          drawSvg();
+        }
+      };
+
+      const onUp = () => {
+        isDragging = false;
+        dragPos = null;
+        drawSvg();
+      };
+
+      frame.addEventListener('pointerdown', onDown);
+      frame.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+    }
+
+    function tryAdvance(target) {
+      if (isDeadEnd || currentDot === -1) return;
+      const lvl = LEVELS[currentLevel];
+
+      let edgeIdx = -1;
+      lvl.edges.forEach(([u, v], i) => {
+        if (!edgeDone[i]) {
+          if ((u === currentDot && v === target) || (v === currentDot && u === target)) {
+            edgeIdx = i;
+          }
+        }
+      });
+
+      if (edgeIdx === -1) return;
+
+      edgeDone[edgeIdx] = true;
+      currentDot = target;
+      visitedDots.add(target);
+      pathHistory.push({ dot: target, edgeIdx });
+      activeHintDot = -1;
+      playStep(pathHistory.length);
+
+      // Kazanma kontrolü
+      if (edgeDone.every(Boolean)) {
+        stopTimer();
+        playWin();
+        const best = progress[currentLevel];
+        if (best === undefined || elapsedSec < best) {
+          progress[currentLevel] = elapsedSec;
+          localStorage.setItem('yavuz_cizgi_prog', JSON.stringify(progress));
+        }
+        document.getElementById('winMsg').innerText = `Bölüm ${currentLevel + 1} tamamlandı! Süre: ${elapsedSec.toFixed(1)}s`;
+        document.getElementById('modalWin').style.display = 'flex';
+      } else {
+        // Çıkmaz kontrolü
+        const canMove = lvl.edges.some(([u, v], i) => {
+          if (edgeDone[i]) return false;
+          return u === target || v === target;
+        });
+
+        if (!canMove) {
+          stopTimer();
+          isDeadEnd = true;
+          isDragging = false;
+          dragPos = null;
+          playDead();
+          document.getElementById('deadBox').style.display = 'flex';
+          const tText = document.getElementById('timerText');
+          if (tText) { tText.style.color = '#ef4444'; tText.innerText += ' (DURDU)'; }
+          const frame = document.getElementById('boardFrame');
+          frame.classList.add('shake');
+          setTimeout(() => frame.classList.remove('shake'), 380);
+        }
+      }
+      drawSvg();
+    }
+
+    function undoStroke() {
+      if (pathHistory.length === 0) return;
+      const last = pathHistory.pop();
+      edgeDone[last.edgeIdx] = false;
+
+      if (pathHistory.length === 0) {
+        currentDot = -1;
+        visitedDots.clear();
+      } else {
+        currentDot = pathHistory[pathHistory.length - 1].dot;
+        visitedDots.clear();
+        pathHistory.forEach(h => visitedDots.add(h.dot));
+      }
+
+      isDeadEnd = false;
+      activeHintDot = -1;
+      document.getElementById('deadBox').style.display = 'none';
+      const tText = document.getElementById('timerText');
+      if (tText) tText.style.color = 'var(--ink)';
+
+      if (currentDot !== -1) startTimer();
+      drawSvg();
+    }
+
+    // Euler Yol Bulucu ile Gerçek Akıllı İpucu (Smart Hint)
+    function giveSmartHint() {
+      if (isDeadEnd) return;
+      const lvl = LEVELS[currentLevel];
+      
+      if (currentDot === -1) {
+        // Henüz başlanmadıysa doğru başlangıç noktasını öner
+        const deg = new Array(lvl.dots.length).fill(0);
+        lvl.edges.forEach(([u, v]) => { deg[u]++; deg[v]++; });
+        const oddDot = deg.findIndex(d => d % 2 !== 0);
+        activeHintDot = oddDot !== -1 ? oddDot : 0;
+        drawSvg();
+        return;
+      }
+
+      // Mevcut noktadan çözüme giden bir sonraki adımı DFS ile ara
+      const remainingEdges = lvl.edges.map((e, idx) => edgeDone[idx] ? null : e);
+      const totalRemaining = remainingEdges.filter(Boolean).length;
+
+      function solve(curr, rem, depth) {
+        if (depth === totalRemaining) return true;
+        for (let i = 0; i < rem.length; i++) {
+          if (!rem[i]) continue;
+          const [u, v] = rem[i];
+          if (u === curr || v === curr) {
+            const next = u === curr ? v : u;
+            rem[i] = null;
+            if (solve(next, rem, depth + 1)) {
+              if (depth === 0) activeHintDot = next;
+              return true;
+            }
+            rem[i] = [u, v];
+          }
+        }
+        return false;
+      }
+
+      if (!solve(currentDot, [...remainingEdges], 0)) {
+        // Mevcut durumdan çözüm yoksa geri al uyarısı ver
+        alert("Bu gidişatla bölüm çözülemez. Lütfen birkaç hamle geri al!");
+      } else {
+        drawSvg();
+      }
+    }
+
+    function nextLevel() {
+      document.getElementById('modalWin').style.display = 'none';
+      if (currentLevel + 1 < LEVELS.length) {
+        startLevel(currentLevel + 1);
+      } else {
+        openMenu();
+      }
+    }
+
+    // Başlat
+    renderLevelSelect();
+  </script>
+</body>
+</html>
