@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#121116">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Tek Çizgi Yavuz - 100 Bölüm</title>
+  <title>Tek Çizgi Yavuz - 100 Bölüm (Kusursuz)</title>
   <style>
     :root {
       --bg: #121116;
@@ -258,9 +257,9 @@
       20%, 60% { transform: translateX(-6px); }
       40%, 80% { transform: translateX(6px); }
     }
-    .pulse-hint { animation: pulse 0.8s infinite alternate; }
+    .pulse-hint { animation: pulse 0.7s infinite alternate; }
     @keyframes pulse {
-      0% { r: 14; opacity: 0.6; }
+      0% { r: 14; opacity: 0.5; }
       100% { r: 24; opacity: 1; stroke-width: 4; }
     }
   </style>
@@ -287,7 +286,7 @@
   </div>
 
   <script>
-    // SES MOTORU (Web Audio API)
+    // SES MOTORU
     let soundOn = true;
     let audioCtx = null;
     function getAudio() {
@@ -321,73 +320,96 @@
       });
     }
 
-    // %100 ÇÖZÜLEBİLİR 100 BÖLÜM GEOMETRİSİ
+    // %100 ÇÖZÜLEBİLİRLİK DOĞRULAMA MOTORU (EULER TEOREMİ & DFS)
+    function isGraphValidEulerian(dots, edges) {
+      const deg = new Array(dots.length).fill(0);
+      edges.forEach(([u, v]) => { deg[u]++; deg[v]++; });
+      const odd = deg.filter(d => d % 2 !== 0).length;
+      if (odd !== 0 && odd !== 2) return false;
+      // Bağlantı kontrolü (Connected Component)
+      const adj = Array.from({ length: dots.length }, () => []);
+      edges.forEach(([u, v]) => { adj[u].push(v); adj[v].push(u); });
+      const vis = new Set();
+      const q = [0];
+      vis.add(0);
+      while (q.length) {
+        const cur = q.pop();
+        adj[cur].forEach(nxt => {
+          if (!vis.has(nxt)) { vis.add(nxt); q.push(nxt); }
+        });
+      }
+      return vis.size === dots.length;
+    }
+
+    // 100 ADET KUSURSUZ ÇÖZÜLEBİLİR BÖLÜM OLUŞTURUCU
     function generateLevels() {
       const lvls = [
+        // 1. Üçgen (3 kenar)
         { name: 'Üçgen', dots: [{x:200,y:90},{x:90,y:310},{x:310,y:310}], edges: [[0,1],[1,2],[2,0]] },
-        { name: 'Kum Saati', dots: [{x:100,y:100},{x:300,y:100},{x:200,y:200},{x:100,y:300},{x:300,y:300}], edges: [[0,1],[1,2],[2,0],[2,3],[3,4],[4,2]] },
-        { name: 'Zarf', dots: [{x:100,y:150},{x:300,y:150},{x:300,y:320},{x:100,y:320},{x:200,y:70}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
-        { name: 'Elmas Kare', dots: [{x:200,y:70},{x:330,y:200},{x:200,y:330},{x:70,y:200},{x:200,y:200}], edges: [[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]] },
-        { name: 'Yıldız', dots: [{x:200,y:60},{x:290,y:340},{x:60,y:170},{x:340,y:170},{x:110,y:340}], edges: [[0,1],[1,2],[2,3],[3,4],[4,0]] },
-        { name: 'Kelebek', dots: [{x:80,y:100},{x:200,y:200},{x:80,y:300},{x:320,y:100},{x:320,y:300}], edges: [[0,1],[1,2],[2,0],[1,3],[3,4],[4,1],[0,3],[2,4]] },
-        { name: 'Çift Üçgen', dots: [{x:200,y:60},{x:80,y:260},{x:320,y:260},{x:200,y:350}], edges: [[0,1],[1,2],[2,0],[1,3],[2,3]] },
-        { name: 'Çapraz Ev', dots: [{x:90,y:150},{x:310,y:150},{x:310,y:330},{x:90,y:330},{x:200,y:60}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
-        { name: 'Hexagon Yıldız', dots: [{x:200,y:60},{x:320,y:130},{x:320,y:270},{x:200,y:340},{x:80,y:270},{x:80,y:130},{x:200,y:200}], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6]] },
-        { name: 'Piramit', dots: [{x:200,y:60},{x:100,y:220},{x:300,y:220},{x:50,y:340},{x:350,y:340}], edges: [[0,1],[0,2],[1,2],[1,3],[2,4],[3,4],[1,4],[2,3]] }
+        // 2. Kum Saati
+        { name: 'Kum Saati', dots: [{x:100,y:100},{x:300,y:100},{x:200,y:200},{x:100,y:300},{x:300,y:300}], edges: [[0,1],[1,2],[2,3],[3,4],[4,2],[2,0]] },
+        // 3. Zarf Ev
+        { name: 'Zarf Ev', dots: [{x:100,y:160},{x:300,y:160},{x:300,y:320},{x:100,y:320},{x:200,y:70}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
+        // 4. Elmas (Düzeltildi: Çakışmasız ve %100 Çözülebilir)
+        { name: 'Kelebek Elmas', dots: [{x:200,y:60},{x:340,y:200},{x:200,y:340},{x:60,y:200},{x:200,y:200}], edges: [[0,1],[1,2],[2,3],[3,0],[1,4],[4,3]] },
+        // 5. Yıldız
+        { name: 'Yıldız', dots: [{x:200,y:60},{x:333,y:157},{x:282,y:313},{x:118,y:313},{x:67,y:157}], edges: [[0,2],[2,4],[4,1],[1,3],[3,0]] },
+        // 6. Çift Üçgen
+        { name: 'Çift Üçgen', dots: [{x:200,y:70},{x:90,y:250},{x:310,y:250},{x:200,y:340}], edges: [[0,1],[1,2],[2,0],[1,3],[2,3]] },
+        // 7. Fiyonk
+        { name: 'Fiyonk', dots: [{x:90,y:110},{x:200,y:200},{x:90,y:290},{x:310,y:110},{x:310,y:290}], edges: [[0,1],[1,2],[2,0],[1,3],[3,4],[4,1]] },
+        // 8. Çapraz Çatı
+        { name: 'Çapraz Çatı', dots: [{x:100,y:160},{x:300,y:160},{x:300,y:320},{x:100,y:320},{x:200,y:70}], edges: [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3],[0,4],[1,4]] },
+        // 9. Altıgen Yıldız
+        { name: 'Hexagon', dots: [{x:200,y:60},{x:320,y:130},{x:320,y:270},{x:200,y:340},{x:80,y:270},{x:80,y:130}], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,2],[2,4],[4,0]] },
+        // 10. Piramit Kulesi
+        { name: 'Piramit', dots: [{x:200,y:60},{x:110,y:200},{x:290,y:200},{x:60,y:340},{x:340,y:340}], edges: [[0,1],[0,2],[1,2],[1,3],[2,4],[3,4],[1,4],[2,3]] }
       ];
 
-      // 11'den 100'e kadar garantili Eulerian Euler döngü/patika grafikleri oluşturma
-      for (let lvl = 11; lvl <= 100; lvl++) {
-        const dotCount = 5 + ((lvl * 3) % 7); // 5 ila 11 nokta
-        const radius = 130;
+      // 11'den 100'e kadar rastgele yürüyüş (Euler Trail) ile %100 çözülebilir geometrik desenler
+      for (let i = 11; i <= 100; i++) {
+        const n = 5 + (i % 6);
         const pts = [];
-        for (let j = 0; j < dotCount; j++) {
-          const ang = (j / dotCount) * Math.PI * 2 - Math.PI / 2;
-          const r = radius - (j % 2 === 1 ? (lvl % 3) * 20 : 0);
+        const radius = 135;
+        for (let j = 0; j < n; j++) {
+          const ang = (j / n) * Math.PI * 2 - Math.PI / 2;
+          const r = radius - ((j % 2) * (15 + (i % 20)));
           pts.push({
             x: Math.round(200 + Math.cos(ang) * r),
             y: Math.round(200 + Math.sin(ang) * r)
           });
         }
-        
-        // Eulerian Circuit/Trail tabanlı kenar oluşturma (Tek çizgi garantisi)
+
+        // Euler Yürüyüşü ile kenarları oluştur (Böylece baştan sona tek seferde çizilmesi garanti edilir)
         const edges = [];
-        const visitedPair = new Set();
-        const addEdge = (u, v) => {
-          if (u === v) return;
+        const edgeSet = new Set();
+        const addE = (u, v) => {
+          if (u === v) return false;
           const k = u < v ? `${u}-${v}` : `${v}-${u}`;
-          if (!visitedPair.has(k)) {
-            visitedPair.add(k);
+          if (!edgeSet.has(k)) {
+            edgeSet.add(k);
             edges.push([u, v]);
+            return true;
           }
+          return false;
         };
 
-        // 1. Ana halka
-        for (let j = 0; j < dotCount; j++) {
-          addEdge(j, (j + 1) % dotCount);
-        }
+        // 1. Dış Halka
+        for (let j = 0; j < n; j++) addE(j, (j + 1) % n);
 
-        // 2. İç çapraz desenler (Eulerian özelliği koruyacak şekilde 2'şer derece eklenir)
-        const step = 2 + (lvl % Math.max(2, Math.floor(dotCount / 2)));
-        for (let j = 0; j < dotCount; j++) {
-          addEdge(j, (j + step) % dotCount);
-        }
+        // 2. Çözülebilir İç Yıldız Desenleri
+        const step = 2;
+        for (let j = 0; j < n; j++) addE(j, (j + step) % n);
 
-        if (lvl % 3 === 0) {
-          // Merkez nokta ve çift bağlı tepe ekleme
-          const centerIdx = pts.length;
-          pts.push({ x: 200, y: 200 });
-          for (let j = 0; j < dotCount; j += 2) {
-            addEdge(j, centerIdx);
-            addEdge((j + 1) % dotCount, centerIdx);
-          }
+        if (isGraphValidEulerian(pts, edges)) {
+          lvls.push({ name: `Bölüm ${i}`, dots: pts, edges: edges });
+        } else {
+          // Eğer tek dereceli köşe fazlaysa basit halka-yıldız yap
+          const safeEdges = [];
+          for (let j = 0; j < n; j++) safeEdges.push([j, (j + 1) % n]);
+          for (let j = 0; j < n; j += 2) safeEdges.push([j, (j + 2) % n]);
+          lvls.push({ name: `Bölüm ${i}`, dots: pts, edges: safeEdges });
         }
-
-        lvls.push({
-          name: `Desen ${lvl}`,
-          dots: pts,
-          edges: edges
-        });
       }
       return lvls;
     }
@@ -485,7 +507,7 @@
         </div>
 
         <div id="deadBox" class="dead-box" style="display:none;">
-          <span>💀 Tıkandın! Süre Durduruldu.</span>
+          <span>💀 Yanlış yola girdin! Süre Durduruldu.</span>
           <button onclick="undoStroke()">Geri Al ↶</button>
         </div>
 
@@ -521,21 +543,21 @@
       const lvl = LEVELS[currentLevel];
 
       let svgHtml = '';
-      // Çizilmemiş gri kenarlar
+      // Çizilmemiş gri çizgiler
       lvl.edges.forEach(([u, v], i) => {
         if (!edgeDone[i]) {
           svgHtml += `<line x1="${lvl.dots[u].x}" y1="${lvl.dots[u].y}" x2="${lvl.dots[v].x}" y2="${lvl.dots[v].y}" stroke="var(--edge-base)" stroke-width="7" stroke-linecap="round"/>`;
         }
       });
 
-      // Çizilmiş turuncu kenarlar
+      // Çizilmiş turuncu çizgiler
       lvl.edges.forEach(([u, v], i) => {
         if (edgeDone[i]) {
           svgHtml += `<line x1="${lvl.dots[u].x}" y1="${lvl.dots[u].y}" x2="${lvl.dots[v].x}" y2="${lvl.dots[v].y}" stroke="var(--edge-done)" stroke-width="9" stroke-linecap="round"/>`;
         }
       });
 
-      // Parmağı/Fareyi takip eden canlı çizgi
+      // Parmağı takip eden elastik çizgi
       if (isDragging && currentDot !== -1 && dragPos && !isDeadEnd) {
         const cur = lvl.dots[currentDot];
         svgHtml += `<line x1="${cur.x}" y1="${cur.y}" x2="${dragPos.x}" y2="${dragPos.y}" stroke="rgba(255, 87, 34, 0.6)" stroke-width="6" stroke-linecap="round" stroke-dasharray="6,6"/>`;
@@ -548,7 +570,7 @@
         const isHint = activeHintDot === i;
 
         if (isHint) {
-          svgHtml += `<circle class="pulse-hint" cx="${d.x}" cy="${d.y}" r="20" fill="none" stroke="#fbbf24" stroke-width="3"/>`;
+          svgHtml += `<circle class="pulse-hint" cx="${d.x}" cy="${d.y}" r="22" fill="none" stroke="#fbbf24" stroke-width="3"/>`;
         }
         if (isCur) {
           svgHtml += `<circle cx="${d.x}" cy="${d.y}" r="17" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
@@ -660,10 +682,10 @@
           progress[currentLevel] = elapsedSec;
           localStorage.setItem('yavuz_cizgi_prog', JSON.stringify(progress));
         }
-        document.getElementById('winMsg').innerText = `Bölüm ${currentLevel + 1} tamamlandı! Süre: ${elapsedSec.toFixed(1)}s`;
+        document.getElementById('winMsg').innerText = `Bölüm ${currentLevel + 1} bitti! Süre: ${elapsedSec.toFixed(1)}s`;
         document.getElementById('modalWin').style.display = 'flex';
       } else {
-        // Çıkmaz kontrolü
+        // Çıkmaz sokak kontrolü
         const canMove = lvl.edges.some(([u, v], i) => {
           if (edgeDone[i]) return false;
           return u === target || v === target;
@@ -710,13 +732,13 @@
       drawSvg();
     }
 
-    // Euler Yol Bulucu ile Gerçek Akıllı İpucu (Smart Hint)
+    // EULER YOLU AKILLI İPUCU (Smart Hint)
     function giveSmartHint() {
       if (isDeadEnd) return;
       const lvl = LEVELS[currentLevel];
       
       if (currentDot === -1) {
-        // Henüz başlanmadıysa doğru başlangıç noktasını öner
+        // Başlangıç noktasını öner (Tek dereceli köşe varsa ordan başla)
         const deg = new Array(lvl.dots.length).fill(0);
         lvl.edges.forEach(([u, v]) => { deg[u]++; deg[v]++; });
         const oddDot = deg.findIndex(d => d % 2 !== 0);
@@ -725,7 +747,6 @@
         return;
       }
 
-      // Mevcut noktadan çözüme giden bir sonraki adımı DFS ile ara
       const remainingEdges = lvl.edges.map((e, idx) => edgeDone[idx] ? null : e);
       const totalRemaining = remainingEdges.filter(Boolean).length;
 
@@ -748,8 +769,7 @@
       }
 
       if (!solve(currentDot, [...remainingEdges], 0)) {
-        // Mevcut durumdan çözüm yoksa geri al uyarısı ver
-        alert("Bu gidişatla bölüm çözülemez. Lütfen birkaç hamle geri al!");
+        alert("Bu gidişatla bölüm çözülemez. Lütfen bir hamle geri al!");
       } else {
         drawSvg();
       }
